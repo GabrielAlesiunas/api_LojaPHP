@@ -16,13 +16,15 @@ class Categoria {
         return (new BaseDeDados())->getConexao();
     }
 
-    public function cadastrar() {
+    public function cadastrar(): bool | Categoria {
         try {
             $cmdSql = "INSERT INTO categoria (tipo, icone) VALUES (:tipo, :icone)";
-            $cx_declarada = $this->cx()->prepare($cmdSql);
+            $pdo = $this->cx();
+            $cx_declarada = $pdo->prepare($cmdSql);
             $cx_declarada->bindParam(':tipo', $this->tipo);
             $cx_declarada->bindParam(':icone', $this->icone);            
-            return $cx_declarada->execute();
+            $cx_declarada->execute();
+            return $this->consultarPorId($pdo->lastInsertId());
         } catch (\PDOException $e) {
             $this->erro = "Erro ao cadastrar categoria: " . $e->getMessage();
             return false;
@@ -32,12 +34,13 @@ class Categoria {
     public function alterar() {
 		try {
             $cmdSql = "UPDATE categoria SET tipo = :tipo, icone = :icone WHERE categoria.id = :id";
-            $cx_declarada = $this->cx()->prepare($cmdSql);
+            $pdo = $this->cx();
+            $cx_declarada = $pdo->prepare($cmdSql);
             $cx_declarada->bindParam(':tipo', $this->tipo);
             $cx_declarada->bindParam(':icone', $this->icone);
             $cx_declarada->bindParam(':id', $this->id);
             $cx_declarada->execute();
-            return ($cx_declarada->rowCount() != 0);
+            return $this->consultarPorId($this->id);
         } catch (PDOException $e) {
             $this->erro = "Erro ao alterar categoria: " . $e->getMessage();
             return false;

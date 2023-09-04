@@ -17,13 +17,15 @@ class Montadora {
         return (new BaseDeDados())->getConexao();
     }
 
-    public function cadastrar() {
+    public function cadastrar(): bool | Montadora  {
         try {
             $cmdSql = "INSERT INTO montadora (nome, logotipo) VALUES (:nome, :logotipo)";
-            $cx_declarada = $this->cx()->prepare($cmdSql);
+            $pdo = $this->cx();
+            $cx_declarada = $pdo->prepare($cmdSql);
             $cx_declarada->bindParam(':nome', $this->nome);
-            $cx_declarada->bindParam(':logotipo', $this->logotipo);            
-            return $cx_declarada->execute();
+            $cx_declarada->bindParam(':logotipo', $this->logotipo);    
+            $cx_declarada->execute();        
+            return $this->consultarPorId($pdo->lastInsertId());
         } catch (\PDOException $e) {
             $this->erro = "Erro ao cadastrar montadora: " . $e->getMessage();
             return false;
@@ -33,12 +35,13 @@ class Montadora {
     public function alterar() {
 		try {
             $cmdSql = "UPDATE montadora SET nome = :nome, logotipo = :logotipo WHERE montadora.id = :id";
-            $cx_declarada = $this->cx()->prepare($cmdSql);
+            $pdo = $this->cx();
+            $cx_declarada = $pdo->prepare($cmdSql);
             $cx_declarada->bindParam(':nome', $this->nome);
             $cx_declarada->bindParam(':logotipo', $this->logotipo);
             $cx_declarada->bindParam(':id', $this->id);
             $cx_declarada->execute();
-            return $cx_declarada->rowCount() != 0;
+            return $this->consultarPorId($this->id);
         } catch (PDOException $e) {
             $this->erro = "Erro ao alterar montadora: " . $e->getMessage();
             return false;
